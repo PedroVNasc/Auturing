@@ -1,33 +1,37 @@
 import sys
-import random
-from PySide6 import QtCore, QtWidgets, QtGui
+from PySide6.QtGui import QPainter, QPen
+from PySide6.QtCore import Qt, QPointF
+from PySide6.QtWidgets import QApplication, QGraphicsScene, QGraphicsView
+from utils import Node
 
-class Test(QtWidgets.QWidget):
-    def __init__(self):
-        super().__init__()
-        
-        self.hello = ['Hello World', 'Olá Mundo']
-        
-        self.button = QtWidgets.QPushButton('Click')
-        self.text = QtWidgets.QLabel("Teste", alignment=QtCore.Qt.AlignCenter)
-        
-        self.layout = QtWidgets.QVBoxLayout(self)
-        self.layout.addWidget(self.text)
-        self.layout.addWidget(self.button)
-        
-        self.button.clicked.connect(self.magic)
-        
-    @QtCore.Slot()
-    def magic(self):
-        self.text.setText(random.choice(self.hello))
 
 if __name__ == '__main__':
-    app = QtWidgets.QApplication([])
-    
-    widget = Test()
-    
-    widget.resize(800, 600)
-    widget.show()
-    
+    app = QApplication([])
+
+    nodes: list[Node] = [
+        Node(
+            center=QPointF(400, 400),
+            text="Q0"
+        ),
+
+        Node(
+            center=QPointF(120, 120),
+            text="TEsteTEsteTEste"
+        ),
+
+        Node(
+            center=QPointF(110, 90),
+            text="Q2"
+        )
+    ]
+
+    scene = QGraphicsScene(0, 0, 800, 600)
+
+    for node in nodes:
+        scene.addItem(node)
+
+    view = QGraphicsView(scene)
+    view.setRenderHint(QPainter.Antialiasing)
+    view.show()
+
     sys.exit(app.exec())
-    # print('Hello, World!')
