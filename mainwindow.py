@@ -1,18 +1,19 @@
 from PySide6.QtWidgets import QMainWindow, QGraphicsView, QGraphicsScene, QToolBar, QLabel
-from PySide6.QtGui import QMouseEvent, QPainter, QAction
-from PySide6.QtCore import QPointF, Qt
-from graph import GraphHandler, Node, Arrow, random_node
+from PySide6.QtGui import QMouseEvent, QPainter, QAction, QIcon
+from PySide6.QtCore import QPointF, QPoint,  Qt
+from graph import GraphHandler, Node, Arrow
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, graph: GraphHandler):
+    def __init__(self):
         super().__init__()
         
-        self.graph = graph
+        self.graph = GraphHandler()
+        self.graph.setParent(self)
+        
         self.source_node: Node = None
-        graph.setParent(self)
         self.mode = "Normal"
-        self.setGeometry(0, 0, 800, 600)
+        self.setGeometry(0, 0, 1366, 720)
         
         self.setup()
 
@@ -23,15 +24,15 @@ class MainWindow(QMainWindow):
         self.toolbar = QToolBar("Teste", self)
         self.addToolBar(self.toolbar)
 
-        action_normal = QAction("Normal", self)
+        action_normal = QAction(QIcon("icons/normal.png"), "Normal", self)
         action_normal.triggered.connect(lambda: self.changeMode("Normal"))
         self.toolbar.addAction(action_normal)
         
-        action_add = QAction("Add", self)
+        action_add = QAction(QIcon("icons/add.png"), "Add", self)
         action_add.triggered.connect(lambda: self.changeMode("Add"))
         self.toolbar.addAction(action_add)
         
-        action_remove = QAction("Remove", self)
+        action_remove = QAction(QIcon("icons/remove.png")   , "Remove", self)
         action_remove.triggered.connect(lambda: self.changeMode("Remove"))
         self.toolbar.addAction(action_remove)
 
@@ -47,16 +48,16 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(self.view)
 
-    def addNode(self):
-        node = random_node(
-            self.scene.sceneRect().center(),
-            min=100,
-            max=400,
-            name=f"Q{len(self.scene.items())}",
-        )
+    # def addNode(self):
+    #     node = random_node(
+    #         self.scene.sceneRect().center(),
+    #         min=100,
+    #         max=400,
+    #         name=f"Q{len(self.scene.items())}",
+    #     )
 
-        self.graph.addNode(node)
-        self.graph.addConnection(node, self.graph.nodes[0], "Teste")
+    #     self.graph.addNode(node)
+    #     self.graph.addConnection(node, self.graph.nodes[0], "Teste")
 
     def changeMode(self, mode: str):
         self.mode = mode
@@ -70,7 +71,7 @@ class MainWindow(QMainWindow):
                 if self.source_node is None or self.source_node is node:
                     self.source_node = node
                 else:
-                    self.graph.addConnection(self.source_node, node, "Teste")
+                    self.graph.addConnection(self.source_node.text, node.text, "Teste")
                     self.source_node = None
             case "Remove":
                 self.graph.removeNode(node)
@@ -87,13 +88,10 @@ class MainWindow(QMainWindow):
     def mousePressEvent(self, event: QMouseEvent) -> None:
         match self.mode:
             case "Add":
-                node = Node(center=event.position(), text="New")
-
-                # print(event.globalPosition())
-                # print(event.position())
-                # print(self.mapTo(self.graph, event.position()))
-
-                self.graph.addNode(node)
+                view_pos = self.view.mapFromGlobal(event.globalPos())
+                scene_pos = QPointF(self.view.mapToScene(view_pos)) 
+                
+                self.graph.addNode(scene_pos, "New")
 
             case _:
                 return super().mousePressEvent(event)

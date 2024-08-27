@@ -19,16 +19,11 @@ ALLOWED_KEYS = {
 }
 
 
-def random_node(center: QPointF, min: int = 100, max: int = 800, name: str = "") -> QPointF:
+def random_point(center: QPointF, min: int = 100, max: int = 800, name: str = "") -> QPointF:
     angle = random.uniform(0, 2) * pi
     dist = random.randint(min, max)
 
-    node = Node(
-        center=center + QPointF(cos(angle) * dist, -sin(angle) * dist),
-        text=name
-    )
-
-    return node
+    return center + QPointF(cos(angle) * dist, -sin(angle) * dist)
 
 
 class EditableText(QGraphicsTextItem):
@@ -71,8 +66,9 @@ class EditableText(QGraphicsTextItem):
 
 
 class Node(QGraphicsItem):
-    def __init__(self, center: QPointF, text: str):
+    def __init__(self, center: QPointF, text: str, parent: QGraphicsItem = None):
         super().__init__()
+        self.setParentItem(parent)
 
         self.setFlags(QGraphicsItem.ItemIsMovable |
                       QGraphicsItem.ItemIsSelectable |
@@ -104,9 +100,6 @@ class Node(QGraphicsItem):
     def itemChange(self, change, value):
         if change == QGraphicsItem.ItemPositionHasChanged:
             self.translocation = value
-            print("Scene Pos: " + str(self.scenePos().x()) + " " + str(self.scenePos().y()))
-            print("Local Pos: " + str(self.pos().x()) + " " + str(self.pos().y()))
-            # print(value)
             
             if self.parentItem():
                 self.parentItem().updateConnection(self)
@@ -249,8 +242,8 @@ class GraphHandler(QGraphicsWidget):
         for node in nodes:
             self.addNode(node)
 
-    def addNode(self, node: Node):
-        node.setParentItem(self)
+    def addNode(self, center: QPointF, text: str = ''):
+        node = Node(center=center, text=text, parent=self)
         self.nodes.append(node)
 
     def removeNode(self, node: Node):
@@ -263,8 +256,15 @@ class GraphHandler(QGraphicsWidget):
 
         node.hide()
         self.update()
+    
+    def getNode(self, name: str) -> Node:
+        for node in self.nodes:
+            if node.text == name:
+                return node
 
-    def addConnection(self, source_node: Node, target_node: Node, data: str):
+    def addConnection(self, source_name: str, target_name: str, data: str):
+        source_node = self.getNode(source_name)
+        target_node = self.getNode(target_name)
         connections = self.getConnections(source_node)
 
         # Update data
